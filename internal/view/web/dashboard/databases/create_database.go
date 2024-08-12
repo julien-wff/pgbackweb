@@ -4,6 +4,7 @@ import (
 	lucide "github.com/eduardolat/gomponents-lucide"
 	"github.com/eduardolat/pgbackweb/internal/database/dbgen"
 	"github.com/eduardolat/pgbackweb/internal/validate"
+	"github.com/eduardolat/pgbackweb/internal/view/web/alpine"
 	"github.com/eduardolat/pgbackweb/internal/view/web/component"
 	"github.com/eduardolat/pgbackweb/internal/view/web/htmx"
 	"github.com/labstack/echo/v4"
@@ -82,6 +83,10 @@ func createDatabaseButton() gomponents.Node {
 				html.ID("create-database-form"),
 				html.Class("space-y-2"),
 
+				alpine.XData(`{
+					input_mode: "simple",
+				}`),
+
 				component.InputControl(component.InputControlParams{
 					Name:        "name",
 					Label:       "Name",
@@ -91,28 +96,111 @@ func createDatabaseButton() gomponents.Node {
 					HelpText:    "A name to easily identify the database",
 				}),
 
-				component.SelectControl(component.SelectControlParams{
-					Name:        "version",
-					Label:       "Version",
-					Placeholder: "Select a version",
-					Required:    true,
-					HelpText:    "The version of the database",
+				component.PaginationControl(component.PaginationControlParams{
+					Name:     "input_mode",
+					Label:    "Input mode",
+					Required: true,
 					Children: []gomponents.Node{
-						html.Option(html.Value("13"), gomponents.Text("PostgreSQL 13")),
-						html.Option(html.Value("14"), gomponents.Text("PostgreSQL 14")),
-						html.Option(html.Value("15"), gomponents.Text("PostgreSQL 15")),
-						html.Option(html.Value("16"), gomponents.Text("PostgreSQL 16")),
+						html.Input(
+							alpine.XModel("input_mode"),
+							html.Type("radio"),
+							html.Class("join-item btn flex-1"),
+							html.Name("input_mode_options"),
+							html.Value("simple"),
+							html.Aria("label", "Simple"),
+						),
+						html.Input(
+							alpine.XModel("input_mode"),
+							html.Type("radio"),
+							html.Class("join-item btn flex-1"),
+							html.Name("input_mode_options"),
+							html.Value("advanced"),
+							html.Aria("label", "Advanced"),
+						),
 					},
 				}),
 
-				component.InputControl(component.InputControlParams{
-					Name:        "connection_string",
-					Label:       "Connection string",
-					Placeholder: "postgresql://user:password@localhost:5432/mydb",
-					Required:    true,
-					Type:        component.InputTypeText,
-					HelpText:    "It should be a valid PostgreSQL connection string including the database name. It will be stored securely using PGP encryption.",
-				}),
+				alpine.Template(
+					alpine.XIf("input_mode == 'simple'"),
+
+					html.Div(
+						html.Div(
+							html.Class("grid grid-cols-4 gap-4"),
+
+							component.InputControl(component.InputControlParams{
+								Name:        "host",
+								Label:       "Host",
+								Placeholder: "localhost",
+								Required:    true,
+								Class:       "col-span-3",
+							}),
+
+							component.InputControl(component.InputControlParams{
+								Name:         "port",
+								Label:        "Port",
+								Type:         component.InputTypeNumber,
+								Placeholder:  "5432",
+								Required:     true,
+								DefaultValue: "5432",
+								Children: []gomponents.Node{
+									html.Min("1"),
+									html.Max("65535"),
+								},
+							}),
+						),
+
+						component.InputControl(component.InputControlParams{
+							Name:        "user",
+							Label:       "Username",
+							Placeholder: "user",
+							Required:    true,
+						}),
+
+						component.InputControl(component.InputControlParams{
+							Name:        "password",
+							Label:       "Password",
+							Placeholder: "password",
+							Required:    true,
+							HelpText:    "Database credentials are stored securely using PGP encryption. ",
+						}),
+
+						component.InputControl(component.InputControlParams{
+							Name:        "database",
+							Label:       "Database",
+							Placeholder: "mydb",
+							Required:    true,
+						}),
+					),
+				),
+
+				alpine.Template(
+					alpine.XIf("input_mode == 'advanced'"),
+
+					html.Div(
+						component.SelectControl(component.SelectControlParams{
+							Name:        "version",
+							Label:       "Version",
+							Placeholder: "Select a version",
+							Required:    true,
+							HelpText:    "The version of the database",
+							Children: []gomponents.Node{
+								html.Option(html.Value("13"), gomponents.Text("PostgreSQL 13")),
+								html.Option(html.Value("14"), gomponents.Text("PostgreSQL 14")),
+								html.Option(html.Value("15"), gomponents.Text("PostgreSQL 15")),
+								html.Option(html.Value("16"), gomponents.Text("PostgreSQL 16")),
+							},
+						}),
+
+						component.InputControl(component.InputControlParams{
+							Name:        "connection_string",
+							Label:       "Connection string",
+							Placeholder: "postgresql://user:password@localhost:5432/mydb",
+							Required:    true,
+							Type:        component.InputTypeText,
+							HelpText:    "It should be a valid PostgreSQL connection string including the database name. It will be stored securely using PGP encryption.",
+						}),
+					),
+				),
 			),
 
 			html.Div(

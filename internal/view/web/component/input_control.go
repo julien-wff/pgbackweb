@@ -19,6 +19,8 @@ type InputControlParams struct {
 	Color              color
 	AutoComplete       string
 	Pattern            string
+	Class              string
+	DefaultValue       string
 	Children           []gomponents.Node
 	HelpButtonChildren []gomponents.Node
 }
@@ -37,6 +39,7 @@ func InputControl(params InputControlParams) gomponents.Node {
 		components.Classes{
 			"form-control w-full":           true,
 			getTextColorClass(params.Color): true,
+			params.Class:                    params.Class != "",
 		},
 		html.Div(
 			html.Class("label flex justify-start"),
@@ -77,6 +80,10 @@ func InputControl(params InputControlParams) gomponents.Node {
 			gomponents.If(
 				params.Pattern != "",
 				html.Pattern(params.Pattern),
+			),
+			gomponents.If(
+				params.DefaultValue != "",
+				html.Value(params.DefaultValue),
 			),
 			gomponents.Group(params.Children),
 		),
